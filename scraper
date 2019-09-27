@@ -1,0 +1,55 @@
+#! python3
+import praw
+import pandas as pd
+import datetime as dt
+
+#info for praw to acess reddit
+reddit = praw.Reddit(client_id='yVKudMQMUozDxw', \
+                     client_secret='_0oGUiwfAHrTzJ3kOpIU9jul578', \
+                     user_agent='RedditReader', \
+                     username='allin75', \
+                     password='Coast015')
+#target subreddit
+subreddit = reddit.subreddit('cscareerquestions')
+top_subreddit = subreddit.top(limit = 100)
+
+for submission in subreddit.top(limit=4):
+    print(submission.title, submission.id)
+  
+    
+# Create the dictionary to store scraped information
+topicsDict = {
+    'title': [], \
+    'score': [], \
+    'id': [], 'url': [], \
+    'comms_num': [] ,\
+    'created': [], \
+    'body': []}
+
+
+
+#loop to store information in dictionary by type
+
+for submission in top_subreddit:
+    topicsDict["title"].append(submission.title)
+    topicsDict["score"].append(submission.score)
+    topicsDict["id"].append(submission.id)
+    topicsDict["url"].append(submission.url)
+    topicsDict["comms_num"].append(submission.num_comments)
+    topicsDict["created"].append(submission.created)
+    topicsDict["body"].append(submission.selftext)
+    
+#use panda to print dictionary in an easily read format
+topics_data = pd.DataFrame(topicsDict)
+
+#convert unix timestamp to utc format 
+def get_date(created):
+    return dt.datetime.fromtimestamp(created) 
+_timestamp = topics_data["created"].apply(get_date)
+topics_data = topics_data.assign(timestamp = _timestamp)
+
+
+#export to spreadsheet
+
+topics_data.to_csv('FILENAME.csv', index=False) 
+
